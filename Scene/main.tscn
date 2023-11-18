@@ -1,0 +1,84 @@
+[gd_scene load_steps=12 format=3 uid="uid://clgsry15lg2oq"]
+
+[ext_resource type="Texture2D" uid="uid://xphlonj4yjpe" path="res://icon.svg" id="1_oljr4"]
+[ext_resource type="PackedScene" uid="uid://bcwkugn6v3oy7" path="res://addons/godot_state_charts/utilities/state_chart_debugger.tscn" id="1_srsb3"]
+[ext_resource type="Script" path="res://Scene/exercice_1/watchman.gd" id="2_jiif4"]
+[ext_resource type="Script" path="res://addons/godot_state_charts/state_chart.gd" id="2_y280l"]
+[ext_resource type="Script" path="res://addons/godot_state_charts/compound_state.gd" id="3_j87hj"]
+[ext_resource type="Script" path="res://addons/godot_state_charts/atomic_state.gd" id="4_vgwdf"]
+[ext_resource type="Script" path="res://addons/godot_state_charts/transition.gd" id="6_s8ghl"]
+[ext_resource type="Script" path="res://Scene/exercice_1/Enemy.gd" id="8_q835u"]
+
+[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_0rs5x"]
+
+[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_yuptm"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_gyc6g"]
+radius = 105.119
+
+[node name="main" type="Node2D"]
+
+[node name="StateChartDebugger" parent="." instance=ExtResource("1_srsb3")]
+offset_left = 771.0
+offset_right = 1149.0
+offset_bottom = 649.0
+initial_node_to_watch = NodePath("../Watchman/StateChart")
+
+[node name="Watchman" type="Node2D" parent="."]
+texture_filter = 1
+material = SubResource("CanvasItemMaterial_0rs5x")
+position = Vector2(445, 297)
+rotation = -1.5708
+scale = Vector2(1.74449, 1.74449)
+script = ExtResource("2_jiif4")
+
+[node name="Icon" type="Sprite2D" parent="Watchman"]
+material = SubResource("CanvasItemMaterial_yuptm")
+rotation = 1.5708
+texture = ExtResource("1_oljr4")
+
+[node name="Area2D" type="Area2D" parent="Watchman"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Watchman/Area2D"]
+shape = SubResource("CircleShape2D_gyc6g")
+
+[node name="StateChart" type="Node" parent="Watchman"]
+script = ExtResource("2_y280l")
+
+[node name="Root" type="Node" parent="Watchman/StateChart"]
+script = ExtResource("3_j87hj")
+initial_state = NodePath("Idle")
+
+[node name="Idle" type="Node" parent="Watchman/StateChart/Root"]
+script = ExtResource("4_vgwdf")
+
+[node name="To Observing" type="Node" parent="Watchman/StateChart/Root/Idle"]
+script = ExtResource("6_s8ghl")
+to = NodePath("../../observing")
+event = &"enemy_entered"
+
+[node name="observing" type="Node" parent="Watchman/StateChart/Root"]
+script = ExtResource("4_vgwdf")
+
+[node name="To Stop Observing" type="Node" parent="Watchman/StateChart/Root/observing"]
+script = ExtResource("6_s8ghl")
+to = NodePath("../../Idle")
+event = &"enemy_exit"
+delay_seconds = 1.0
+
+[node name="Enemy" type="Node2D" parent="."]
+scale = Vector2(0.425025, 0.425025)
+script = ExtResource("8_q835u")
+
+[node name="Icon" type="Sprite2D" parent="Enemy"]
+texture = ExtResource("1_oljr4")
+
+[node name="Area2D" type="Area2D" parent="Enemy"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Enemy/Area2D"]
+shape = SubResource("CircleShape2D_gyc6g")
+
+[connection signal="area_entered" from="Watchman/Area2D" to="Watchman" method="_on_area_2d_area_entered"]
+[connection signal="area_exited" from="Watchman/Area2D" to="Watchman" method="_on_area_2d_area_exited"]
+[connection signal="state_entered" from="Watchman/StateChart/Root/Idle" to="Watchman" method="_on_idle_state_entered"]
+[connection signal="state_processing" from="Watchman/StateChart/Root/observing" to="Watchman" method="_on_observing_state_processing"]
